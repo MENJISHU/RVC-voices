@@ -1,4 +1,25 @@
 {
   "schema": 2,
-  "packs": []
+  "packs": [
+    {
+      "id": "woyanisha08_v2",
+      "name": "沃雅妮莎 V2",
+      "version": "1.0.0",
+      "description": "沃雅妮莎音色模型与索引",
+      "model": {
+        "url": "packs/woyanisha08_v2/woyanisha08.pth",
+        "size": 55223661,
+        "sha256": "fd8cdcb2f8e718dd580b1e5460566efa23ca03fc735710682a8d521564d4f568"
+      },
+      "indexes": [
+        {
+          "id": "full",
+          "name": "完整索引",
+          "url": "packs/woyanisha08_v2/woyanisha08_added_IVF156_Flat_nprobe_1_woyanisha08_v2.index",
+          "size": 19284019,
+          "sha256": "a99256a901ce455f9d335f425eb268d5466a63069bf15e3ebe62035d5abe8a46"
+        }
+      ]
+    }
+  ]
 }
