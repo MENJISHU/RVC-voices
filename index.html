@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MENJISHU · 音色库</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #0f1115;
+      color: #e6edf3;
+      font-family: system-ui, "Microsoft YaHei", sans-serif;
+      line-height: 1.7;
+    }
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 48px 20px;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin: 0 0 12px; font-size: 23px; }
+    p { margin: 8px 0; }
+    .hint, .meta { color: #a6b3c2; }
+    .address {
+      display: block;
+      margin: 16px 0 28px;
+      padding: 12px 16px;
+      background: #1c2129;
+      border: 1px solid #303843;
+      border-radius: 10px;
+      color: #8ac2ff;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+    article {
+      margin: 18px 0;
+      padding: 24px;
+      background: #171b22;
+      border: 1px solid #2b333e;
+      border-radius: 16px;
+    }
+    a { color: #8ac2ff; overflow-wrap: anywhere; }
+    a:hover { color: #c1dfff; }
+    a:focus-visible { outline: 2px solid #8ac2ff; }
+    footer { margin-top: 32px; color: #a6b3c2; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>MENJISHU · 音色库</h1>
+    <p class="hint">
+      在插件的「音色包」设置中填入下方仓库地址，
+      点击「获取列表」，即可选择音色下载安装。
+    </p>
+    <code class="address" id="address"></code>
+    <p id="status" role="status">正在加载音色列表……</p>
+    <section id="packs" aria-label="音色列表"></section>
+    <footer>音色列表随仓库清单自动更新。</footer>
+  </main>
+
+  <script>
+    const base = new URL("./", location.href);
+    document.getElementById("address").textContent = base.href;
+
+    function addText(parent, tag, text, className) {
+      const element = document.createElement(tag);
+      element.textContent = text;
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
+    }
+
+    function addDownload(parent, label, file) {
+      if (!file || typeof file.url !== "string") return;
+      const url = new URL(file.url, base);
+      if (!["https:", "http:"].includes(url.protocol)) return;
+
+      const row = addText(parent, "p", label + "：");
+      const link = document.createElement("a");
+      link.href = url.href;
+      link.textContent = "下载文件";
+      row.appendChild(link);
+
+      if (Number.isFinite(file.size)) {
+        row.appendChild(document.createTextNode(
+          " · " + (file.size / 1024 / 1024).toFixed(1) + " MB"
+        ));
+      }
+    }
+
+    async function loadPacks() {
+      const status = document.getElementById("status");
+      const list = document.getElementById("packs");
+
+      try {
+        const response = await fetch(
+          new URL("manifest.json", base),
+          { cache: "no-store" }
+        );
+        if (!response.ok) {
+          throw new Error("清单请求失败，状态码 " + response.status);
+        }
+
+        const manifest = await response.json();
+        if (!Array.isArray(manifest.packs)) {
+          throw new Error("清单中缺少 packs 列表");
+        }
+
+        const cards = document.createDocumentFragment();
+
+        for (const pack of manifest.packs) {
+          const card = document.createElement("article");
+          addText(card, "h2", pack.name || pack.id || "未命名音色");
+
+          if (pack.description) {
+            addText(card, "p", pack.description, "hint");
+          }
+
+          const details = [];
+          if (pack.author) details.push("作者：" + pack.author);
+          if (pack.version) details.push("版本：" + pack.version);
+          if (pack.license) details.push("授权：" + pack.license);
+          if (details.length) {
+            addText(card, "p", details.join(" · "), "meta");
+          }
+
+          addDownload(card, "模型", pack.model);
+          for (const index of pack.indexes || []) {
+            addDownload(card, index.name || "索引", index);
+          }
+
+          cards.appendChild(card);
+        }
+
+        list.replaceChildren(cards);
+        status.textContent = manifest.packs.length
+          ? "共 " + manifest.packs.length + " 个音色"
+          : "暂时还没有音色。";
+      } catch (error) {
+        status.textContent =
+          "加载失败：" + error.message +
+          "。请确认 manifest.json 已上传，并通过 GitHub Pages 网址访问。";
+      }
+    }
+
+    loadPacks();
+  </script>
+</body>
+</html>
